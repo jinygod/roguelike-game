@@ -19,4 +19,25 @@ describe("createStageOneBattle", () => {
       "slime",
     ]);
   });
+
+  it("creates independent nested runtime state", () => {
+    const first = createStageOneBattle();
+    const second = createStageOneBattle();
+
+    first.heroes[0].hp = 1;
+    first.heroes[0].cooldowns.slash = 3;
+    first.intents[0].damage = 99;
+    first.events.push({
+      type: "damage",
+      round: 1,
+      sourceId: "warrior",
+      targetId: "rat-a",
+      amount: 2,
+    });
+
+    expect(second.heroes[0].hp).toBe(12);
+    expect(second.heroes[0].cooldowns).toEqual({});
+    expect(second.intents[0].damage).toBe(1);
+    expect(second.events).toEqual([]);
+  });
 });

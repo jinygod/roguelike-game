@@ -1,6 +1,6 @@
-import type { Combatant } from "../model/combatant";
+import type { EnemyCombatant } from "../model/combatant";
 
-export const createStageOneEnemies = (): Combatant[] => [
+export const createStageOneEnemies = (): EnemyCombatant[] => [
   {
     id: "rat-a",
     name: "숲쥐 A",

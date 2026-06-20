@@ -1,12 +1,12 @@
-import type { CombatantId } from "./combatant";
+import type { EnemyId, HeroId } from "./combatant";
 
 export type BattleCommand =
-  | { type: "select-hero"; heroId: CombatantId }
+  | { type: "select-hero"; heroId: HeroId }
   | {
       type: "use-skill";
-      actorId: CombatantId;
+      actorId: HeroId;
       skillId: string;
-      targetId: CombatantId;
+      targetId: EnemyId;
     }
   | { type: "end-hero-turn" }
   | { type: "restart" };

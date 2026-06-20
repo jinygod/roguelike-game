@@ -1,6 +1,6 @@
-import type { Combatant } from "../model/combatant";
+import type { HeroCombatant } from "../model/combatant";
 
-export const createHeroes = (): Combatant[] => [
+export const createHeroes = (): HeroCombatant[] => [
   {
     id: "warrior",
     name: "전사",

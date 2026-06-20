@@ -1,11 +1,16 @@
 import type { BattleEvent } from "../events/battleEvent";
-import type { Combatant, CombatantId } from "./combatant";
+import type {
+  EnemyCombatant,
+  EnemyId,
+  HeroCombatant,
+  HeroId,
+} from "./combatant";
 
 export type BattlePhase = "hero" | "enemy" | "victory" | "defeat";
 
 export interface EnemyIntent {
-  actorId: CombatantId;
-  targetId: CombatantId;
+  actorId: EnemyId;
+  targetId: HeroId;
   skillId: string;
   damage: number;
 }
@@ -14,9 +19,9 @@ export interface BattleState {
   stageId: "1-1";
   round: number;
   phase: BattlePhase;
-  heroes: Combatant[];
-  enemies: Combatant[];
+  heroes: HeroCombatant[];
+  enemies: EnemyCombatant[];
   intents: EnemyIntent[];
-  selectedHeroId: CombatantId | null;
+  selectedHeroId: HeroId | null;
   events: BattleEvent[];
 }
