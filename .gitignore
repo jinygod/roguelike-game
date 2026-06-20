@@ -1,0 +1,29 @@
+# Local brainstorming companion
+.superpowers/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Frontend
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Backend
+.gradle/
+build/
+out/
+
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and local data
+*.log
+data/
