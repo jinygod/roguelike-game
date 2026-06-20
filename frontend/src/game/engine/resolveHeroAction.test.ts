@@ -165,7 +165,41 @@ describe("resolveHeroAction", () => {
     ).toThrow("아직 사용할 수 없는 스킬입니다.");
   });
 
-  it("rejects targets for an unimplemented same-lane skill", () => {
+  it("sets the used skill cooldown without mutating the original battle", () => {
+    const battle = createStageOneBattle();
+
+    battle.heroes = battle.heroes.map((hero) =>
+      hero.id === "warrior"
+        ? {
+            ...hero,
+            skills: hero.skills.map((skill) =>
+              skill.id === "slash" ? { ...skill, cooldown: 2 } : skill,
+            ),
+          }
+        : hero,
+    );
+
+    const before = structuredClone(battle);
+    const originalActor = battle.heroes.find(
+      (hero) => hero.id === "warrior",
+    );
+
+    const result = resolveHeroAction(battle, {
+      actorId: "warrior",
+      skillId: "slash",
+      targetId: "slime",
+    });
+
+    const resultActor = result.heroes.find(
+      (hero) => hero.id === "warrior",
+    );
+
+    expect(resultActor?.cooldowns.slash).toBe(2);
+    expect(battle).toEqual(before);
+    expect(resultActor?.cooldowns).not.toBe(originalActor?.cooldowns);
+  });
+
+  it("rejects an unsupported target mode explicitly", () => {
     const battle = createStageOneBattle();
     const actor = battle.heroes.find((hero) => hero.id === "warrior");
 
@@ -186,6 +220,6 @@ describe("resolveHeroAction", () => {
         skillId: "slash",
         targetId: "slime",
       }),
-    ).toThrow("쓰러진 대상은 선택할 수 없습니다.");
+    ).toThrow("아직 지원하지 않는 대상 방식입니다.");
   });
 });

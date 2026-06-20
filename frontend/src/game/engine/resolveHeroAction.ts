@@ -1,12 +1,10 @@
 import type { BattleState } from "../model/battle";
-import type { EnemyId, HeroId } from "../model/combatant";
+import type { BattleCommand } from "../model/command";
 import { getLegalTargets } from "./getLegalTargets";
 
-export interface HeroAction {
-  actorId: HeroId;
-  skillId: string;
-  targetId: EnemyId;
-}
+type UseSkillCommand = Extract<BattleCommand, { type: "use-skill" }>;
+
+export type HeroAction = Omit<UseSkillCommand, "type">;
 
 export function resolveHeroAction(
   battle: BattleState,
@@ -38,6 +36,10 @@ export function resolveHeroAction(
     throw new Error("아직 사용할 수 없는 스킬입니다.");
   }
 
+  if (skill.target !== "single-enemy") {
+    throw new Error("아직 지원하지 않는 대상 방식입니다.");
+  }
+
   if (!getLegalTargets(battle, skill).includes(action.targetId)) {
     throw new Error("쓰러진 대상은 선택할 수 없습니다.");
   }
@@ -55,7 +57,16 @@ export function resolveHeroAction(
   return {
     ...battle,
     heroes: battle.heroes.map((hero) =>
-      hero.id === actor.id ? { ...hero, actedThisRound: true } : hero,
+      hero.id === actor.id
+        ? {
+            ...hero,
+            cooldowns: {
+              ...hero.cooldowns,
+              [skill.id]: skill.cooldown,
+            },
+            actedThisRound: true,
+          }
+        : hero,
     ),
     enemies: battle.enemies.map((enemy) =>
       enemy.id === target.id
