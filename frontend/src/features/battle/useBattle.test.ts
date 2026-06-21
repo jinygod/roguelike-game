@@ -139,6 +139,87 @@ describe("useBattle", () => {
     expect(result.current.selectedSkillId).toBe("shot");
   });
 
+  it.each(["victory", "defeat"] as const)(
+    "does not select a skill during the %s phase",
+    (phase) => {
+      const { result } = renderHook(() => useBattle());
+
+      act(() => {
+        result.current.selectHero("archer");
+      });
+
+      result.current.battle.phase = phase;
+
+      act(() => {
+        result.current.selectSkill("shot");
+      });
+
+      expect(result.current.selectedHero?.id).toBe("archer");
+      expect(result.current.selectedSkillId).toBeNull();
+    },
+  );
+
+  it.each(["victory", "defeat"] as const)(
+    "preserves the current skill during the %s phase",
+    (phase) => {
+      const { result } = renderHook(() => useBattle());
+
+      act(() => {
+        result.current.selectHero("archer");
+      });
+      act(() => {
+        result.current.selectSkill("shot");
+      });
+
+      const archer = result.current.battle.heroes.find(
+        (hero) => hero.id === "archer",
+      );
+      const shot = archer?.skills.find((skill) => skill.id === "shot");
+
+      if (!archer || !shot) {
+        throw new Error("Missing archer shot test fixture");
+      }
+
+      archer.skills = [
+        ...archer.skills,
+        { ...shot, id: "quick-shot" },
+      ];
+      result.current.battle.phase = phase;
+
+      act(() => {
+        result.current.selectSkill("quick-shot");
+      });
+
+      expect(result.current.selectedHero?.id).toBe("archer");
+      expect(result.current.selectedSkillId).toBe("shot");
+    },
+  );
+
+  it("does not select a skill while its cooldown is active", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+
+    const archer = result.current.battle.heroes.find(
+      (hero) => hero.id === "archer",
+    );
+
+    if (!archer) {
+      throw new Error("Missing archer test fixture");
+    }
+
+    archer.cooldowns.shot = 1;
+
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+
+    expect(result.current.selectedHero?.id).toBe("archer");
+    expect(result.current.selectedSkillId).toBeNull();
+  });
+
   it("ignores attacks without a selection and resolves a selected attack", () => {
     const { result } = renderHook(() => useBattle());
     const initialBattle = result.current.battle;
@@ -204,6 +285,45 @@ describe("useBattle", () => {
     expect(result.current.battle.events).toHaveLength(eventCount);
     expect(result.current.selectedHero?.id).toBe("mage");
     expect(result.current.selectedSkillId).toBe("magic-bolt");
+  });
+
+  it("ignores an attack if the selected skill enters cooldown", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+
+    const archer = result.current.battle.heroes.find(
+      (hero) => hero.id === "archer",
+    );
+    const ratA = result.current.battle.enemies.find(
+      (enemy) => enemy.id === "rat-a",
+    );
+
+    if (!archer || !ratA) {
+      throw new Error("Missing cooldown attack test fixture");
+    }
+
+    archer.cooldowns.shot = 1;
+    const battleBeforeAttack = result.current.battle;
+    const targetHp = ratA.hp;
+    const eventCount = result.current.battle.events.length;
+
+    expect(() => {
+      act(() => {
+        result.current.attackTarget("rat-a");
+      });
+    }).not.toThrow();
+
+    expect(result.current.battle).toBe(battleBeforeAttack);
+    expect(ratA.hp).toBe(targetHp);
+    expect(result.current.battle.events).toHaveLength(eventCount);
+    expect(result.current.selectedHero?.id).toBe("archer");
+    expect(result.current.selectedSkillId).toBe("shot");
   });
 
   it("clears the selected skill and advances the round when ending the hero turn", () => {

@@ -40,16 +40,22 @@ export function useBattle() {
   };
 
   const selectSkill = (skillId: string) => {
+    const skill = selectedHero?.skills.find(
+      (candidate) => candidate.id === skillId,
+    );
+
     if (
+      battle.phase !== "hero" ||
       !selectedHero ||
       selectedHero.hp <= 0 ||
       selectedHero.actedThisRound ||
-      !selectedHero.skills.some((skill) => skill.id === skillId)
+      !skill ||
+      selectedHero.cooldowns[skill.id] > 0
     ) {
       return;
     }
 
-    setSelectedSkillId(skillId);
+    setSelectedSkillId(skill.id);
   };
 
   const attackTarget = (targetId: EnemyId) => {
@@ -63,6 +69,7 @@ export function useBattle() {
       selectedHero.hp <= 0 ||
       selectedHero.actedThisRound ||
       !selectedSkill ||
+      selectedHero.cooldowns[selectedSkill.id] > 0 ||
       !getLegalTargets(battle, selectedSkill).includes(targetId)
     ) {
       return;
