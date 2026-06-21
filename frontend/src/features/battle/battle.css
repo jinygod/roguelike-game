@@ -15,7 +15,15 @@
   isolation: isolate;
   min-height: 100svh;
   color: var(--color-text);
-  background: var(--color-page);
+  background:
+    linear-gradient(
+      180deg,
+      rgb(2 7 4 / 34%),
+      rgb(1 4 2 / 58%)
+    ),
+    url("../../assets/pixel/goblin-forest.png") center / cover fixed
+      no-repeat,
+    var(--color-page);
 }
 
 .battle-game {
@@ -31,15 +39,15 @@
   background:
     linear-gradient(
       90deg,
-      rgb(0 0 0 / 28%),
+      rgb(0 0 0 / 38%),
       transparent 11% 89%,
-      rgb(0 0 0 / 28%)
+      rgb(0 0 0 / 38%)
     ),
     linear-gradient(
       180deg,
-      #07100b 0%,
-      #0b1710 42%,
-      var(--color-panel) 100%
+      rgb(7 16 11 / 34%) 0%,
+      rgb(11 23 16 / 18%) 42%,
+      rgb(5 11 8 / 52%) 100%
     );
 }
 
@@ -171,12 +179,20 @@
   background:
     linear-gradient(
       180deg,
-      rgb(20 37 25 / 92%) 0 32.9%,
+      rgb(3 8 5 / 30%) 0 32.9%,
       var(--battle-lane-line) 33%,
-      rgb(20 37 25 / 92%) 33.2% 66.1%,
+      rgb(3 8 5 / 24%) 33.2% 66.1%,
       var(--battle-lane-line) 66.2%,
-      rgb(14 28 19 / 94%) 66.4% 100%
+      rgb(2 6 4 / 42%) 66.4% 100%
     ),
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 24%),
+      transparent 24% 76%,
+      rgb(0 0 0 / 24%)
+    ),
+    url("../../assets/pixel/goblin-forest.png") center / cover
+      no-repeat,
     var(--battle-field);
   box-shadow:
     inset 0 0 0 3px var(--color-page),
@@ -192,14 +208,9 @@
   background:
     linear-gradient(
       90deg,
-      rgb(0 0 0 / 32%),
+      rgb(0 0 0 / 20%),
       transparent 23% 77%,
-      rgb(0 0 0 / 32%)
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 82px,
-      rgb(223 188 104 / 2%) 83px 84px
+      rgb(0 0 0 / 20%)
     );
 }
 
@@ -211,6 +222,7 @@
   gap: clamp(5px, 0.8vw, 10px);
   min-width: 0;
   min-height: 0;
+  overflow: visible;
 }
 
 .battlefield-slot {
@@ -218,6 +230,7 @@
   align-items: center;
   min-width: 0;
   min-height: 0;
+  overflow: visible;
 }
 
 .battlefield-heroes .battlefield-slot {
@@ -311,6 +324,7 @@
   height: 88px;
   min-height: 88px;
   padding: 5px;
+  overflow: visible;
   color: inherit;
   border: 1px solid var(--color-border);
   border-radius: 1px;
@@ -359,42 +373,24 @@
 }
 
 .combatant-card-group[data-defeated="true"]
-  .combatant-sprite-placeholder {
+  .combatant-sprite {
   opacity: 0.34;
-  filter: grayscale(1);
+  filter:
+    grayscale(1)
+    brightness(0.58)
+    drop-shadow(0 3px 2px rgb(0 0 0 / 62%));
 }
 
-.combatant-sprite-placeholder {
+.combatant-sprite {
   display: block;
   width: 100%;
   height: 100%;
-  border: 1px solid rgb(241 236 217 / 24%);
-  border-radius: 0;
+  object-fit: contain;
   image-rendering: pixelated;
-  box-shadow:
-    inset 0 0 0 3px rgb(3 7 5 / 42%),
-    inset 8px 0 0 rgb(255 255 255 / 3%),
-    inset -8px 0 0 rgb(0 0 0 / 12%);
-}
-
-.combatant-sprite-placeholder[data-kind="warrior"] {
-  background: #75542b;
-}
-
-.combatant-sprite-placeholder[data-kind="archer"] {
-  background: #24636b;
-}
-
-.combatant-sprite-placeholder[data-kind="mage"] {
-  background: #583873;
-}
-
-.combatant-sprite-placeholder[data-kind="rat"] {
-  background: #596044;
-}
-
-.combatant-sprite-placeholder[data-kind="slime"] {
-  background: #4f7237;
+  filter: drop-shadow(0 4px 3px rgb(0 0 0 / 68%));
+  transition:
+    filter 140ms ease,
+    opacity 140ms ease;
 }
 
 .hp-track {

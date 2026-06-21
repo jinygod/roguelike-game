@@ -216,6 +216,35 @@ describe("IntentPanel", () => {
 });
 
 describe("Battlefield", () => {
+  it("renders decorative combatant sprite assets without placeholders", () => {
+    const battle = createStageOneBattle();
+
+    render(
+      <Battlefield
+        battle={battle}
+        selectedHeroId={null}
+        legalTargetIds={[]}
+        onSelectHero={() => undefined}
+        onAttack={() => undefined}
+      />,
+    );
+
+    const warriorButton = screen.getByRole("button", {
+      name: "전사 선택",
+    });
+    const sprite = warriorButton.querySelector(
+      "img.combatant-sprite",
+    );
+
+    expect(sprite?.tagName).toBe("IMG");
+    expect(sprite).toHaveAttribute("alt", "");
+    expect(sprite).toHaveAttribute("draggable", "false");
+    expect(sprite?.getAttribute("src")).toMatch(/warrior\.png$/);
+    expect(
+      document.querySelector(".combatant-sprite-placeholder"),
+    ).not.toBeInTheDocument();
+  });
+
   it("enables only living enemies in the legal target list", () => {
     const battle = createStageOneBattle();
     battle.enemies = battle.enemies.map((enemy) =>

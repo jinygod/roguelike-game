@@ -1,3 +1,4 @@
+import { combatantSpriteUrls } from "../../assets/pixel/sprites";
 import type { Combatant } from "../../game/model/combatant";
 
 interface CombatantCardProps {
@@ -39,10 +40,11 @@ export function CombatantCard({
         aria-describedby={nameplateId}
         aria-pressed={selectable ? selected : undefined}
       >
-        <span
-          className="combatant-sprite-placeholder"
-          data-kind={combatant.kind}
-          aria-hidden="true"
+        <img
+          src={combatantSpriteUrls[combatant.kind]}
+          alt=""
+          className="combatant-sprite"
+          draggable={false}
         />
       </button>
       <span className="hp-track" aria-hidden="true">
