@@ -34,6 +34,7 @@ export function SkillBar({
                 type="button"
                 className="skill-button"
                 data-selected={selectedSkillId === skill.id}
+                aria-pressed={selectedSkillId === skill.id}
                 disabled={disabled}
                 onClick={() => onSelectSkill(skill.id)}
                 aria-label={`${skill.name} 선택`}

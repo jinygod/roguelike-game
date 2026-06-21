@@ -1,4 +1,5 @@
 import { stageOne } from "../../game/data/stages";
+import { getLegalTargets } from "../../game/engine/getLegalTargets";
 import { BattleResult } from "./BattleResult";
 import { Battlefield } from "./Battlefield";
 import { IntentPanel } from "./IntentPanel";
@@ -10,9 +11,15 @@ export function BattleScreen() {
   const hasLivingHeroWhoCanAct = controller.battle.heroes.some(
     (hero) => hero.hp > 0 && !hero.actedThisRound,
   );
-  const canAttack =
-    controller.battle.phase === "hero" &&
-    controller.selectedSkillId !== null;
+  const selectedSkill =
+    controller.battle.phase === "hero"
+      ? controller.selectedHero?.skills.find(
+          (skill) => skill.id === controller.selectedSkillId,
+        )
+      : undefined;
+  const legalTargetIds = selectedSkill
+    ? getLegalTargets(controller.battle, selectedSkill)
+    : [];
 
   return (
     <main className="battle-screen">
@@ -33,7 +40,7 @@ export function BattleScreen() {
       <Battlefield
         battle={controller.battle}
         selectedHeroId={controller.selectedHero?.id ?? null}
-        canAttack={canAttack}
+        legalTargetIds={legalTargetIds}
         onSelectHero={controller.selectHero}
         onAttack={controller.attackTarget}
       />

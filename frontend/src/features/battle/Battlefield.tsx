@@ -9,7 +9,7 @@ import { CombatantCard } from "./CombatantCard";
 interface BattlefieldProps {
   battle: BattleState;
   selectedHeroId: HeroId | null;
-  canAttack: boolean;
+  legalTargetIds: readonly EnemyId[];
   onSelectHero: (heroId: HeroId) => void;
   onAttack: (enemyId: EnemyId) => void;
 }
@@ -34,7 +34,7 @@ function comparePositions(
 export function Battlefield({
   battle,
   selectedHeroId,
-  canAttack,
+  legalTargetIds,
   onSelectHero,
   onAttack,
 }: BattlefieldProps) {
@@ -62,6 +62,7 @@ export function Battlefield({
             >
               <CombatantCard
                 combatant={hero}
+                selectable
                 selected={hero.id === selectedHeroId}
                 onClick={
                   canSelect ? () => onSelectHero(hero.id) : undefined
@@ -80,7 +81,8 @@ export function Battlefield({
         aria-label="적군"
       >
         {enemies.map((enemy) => {
-          const canTarget = canAttack && enemy.hp > 0;
+          const canTarget =
+            enemy.hp > 0 && legalTargetIds.includes(enemy.id);
 
           return (
             <div

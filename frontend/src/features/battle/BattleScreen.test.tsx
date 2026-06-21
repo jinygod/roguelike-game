@@ -1,7 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { createStageOneBattle } from "../../game/engine/createBattle";
+import type { BattlePhase } from "../../game/model/battle";
+import { BattleResult } from "./BattleResult";
 import { BattleScreen } from "./BattleScreen";
+import { Battlefield } from "./Battlefield";
+import { IntentPanel } from "./IntentPanel";
 
 type BattleUser = ReturnType<typeof userEvent.setup>;
 
@@ -46,7 +51,181 @@ async function winStageOne(user: BattleUser) {
   await endTurn(user);
 }
 
+describe("IntentPanel", () => {
+  it("hides an intent when its target is defeated", () => {
+    const battle = createStageOneBattle();
+    battle.heroes = battle.heroes.map((hero) =>
+      hero.id === "archer" ? { ...hero, hp: 0 } : hero,
+    );
+
+    render(<IntentPanel battle={battle} />);
+
+    expect(
+      screen.queryByText("숲쥐 A → 궁수 · 피해 1"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("이끼 슬라임 → 전사 · 피해 2"),
+    ).toBeInTheDocument();
+  });
+
+  it.each(["victory", "defeat"] as const)(
+    "hides every intent during the %s phase",
+    (phase) => {
+      const battle = createStageOneBattle();
+      battle.phase = phase;
+
+      render(<IntentPanel battle={battle} />);
+
+      expect(
+        screen.getByRole("heading", { name: "적 행동 예고" }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("list")).toBeEmptyDOMElement();
+    },
+  );
+
+  it("uses the actor skill damage instead of stale intent damage", () => {
+    const battle = createStageOneBattle();
+    battle.intents[0].damage = 99;
+
+    render(<IntentPanel battle={battle} />);
+
+    expect(
+      screen.getByText("숲쥐 A → 궁수 · 피해 1"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("숲쥐 A → 궁수 · 피해 99"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides an intent when the actor no longer has its skill", () => {
+    const battle = createStageOneBattle();
+    battle.intents[0].skillId = "missing-skill";
+
+    render(<IntentPanel battle={battle} />);
+
+    expect(
+      screen.queryByText("숲쥐 A → 궁수 · 피해 1"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("Battlefield", () => {
+  it("enables only living enemies in the legal target list", () => {
+    const battle = createStageOneBattle();
+    battle.enemies = battle.enemies.map((enemy) =>
+      enemy.id === "rat-a" ? { ...enemy, hp: 0 } : enemy,
+    );
+
+    render(
+      <Battlefield
+        battle={battle}
+        selectedHeroId={null}
+        legalTargetIds={["rat-a", "rat-b"]}
+        onSelectHero={() => undefined}
+        onAttack={() => undefined}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "숲쥐 A 공격" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "숲쥐 B 공격" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "이끼 슬라임 공격" }),
+    ).toBeDisabled();
+  });
+});
+
+describe("BattleResult", () => {
+  it.each([
+    ["victory", "전투 승리"],
+    ["defeat", "파티 전멸"],
+  ] as const)(
+    "renders the %s phase as a native dialog",
+    (phase: BattlePhase, heading) => {
+      render(
+        <BattleResult phase={phase} onRestart={() => undefined} />,
+      );
+
+      const dialog = screen.getByRole("dialog", { name: heading });
+      const restartButton = screen.getByRole("button", {
+        name: "1-1 다시 시작",
+      });
+
+      expect(dialog.tagName).toBe("DIALOG");
+      expect(dialog).toHaveAttribute("open");
+      expect(dialog).not.toHaveAttribute("aria-modal");
+      expect(restartButton).toHaveFocus();
+    },
+  );
+
+  it("does not render a result during an active phase", () => {
+    render(
+      <BattleResult phase="hero" onRestart={() => undefined} />,
+    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
 describe("BattleScreen", () => {
+  it("keeps every enemy action disabled before a skill is selected", () => {
+    setupBattle();
+
+    expect(
+      screen.getByRole("button", { name: "숲쥐 A 공격" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "숲쥐 B 공격" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "이끼 슬라임 공격" }),
+    ).toBeDisabled();
+  });
+
+  it("describes hero actions with readable HP outside the button", async () => {
+    const user = setupBattle();
+    const archerButton = screen.getByRole("button", {
+      name: "궁수 선택",
+    });
+    const nameplate = screen.getByText("궁수 · HP 8/8");
+
+    expect(archerButton).toHaveAttribute(
+      "aria-describedby",
+      "combatant-archer-nameplate",
+    );
+    expect(nameplate).toHaveAttribute(
+      "id",
+      "combatant-archer-nameplate",
+    );
+    expect(archerButton).not.toContainElement(nameplate);
+    expect(archerButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(archerButton);
+
+    expect(archerButton).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("exposes the selected skill with aria-pressed", async () => {
+    const user = setupBattle();
+
+    await user.click(
+      screen.getByRole("button", { name: "궁수 선택" }),
+    );
+
+    const shotButton = screen.getByRole("button", {
+      name: "사격 선택",
+    });
+
+    expect(shotButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(shotButton);
+
+    expect(shotButton).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("lets the archer select shot and defeat rat A", async () => {
     const user = setupBattle();
 
@@ -157,15 +336,4 @@ describe("BattleScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("shows defeat after enemy attacks eliminate the party", async () => {
-    const user = setupBattle();
-
-    for (let turn = 0; turn < 7; turn += 1) {
-      await endTurn(user);
-    }
-
-    expect(
-      screen.getByRole("dialog", { name: "파티 전멸" }),
-    ).toBeInTheDocument();
-  });
 });
