@@ -2,7 +2,7 @@
 
 세 캐릭터를 직접 지휘하고 증강 시너지를 쌓아 5개 스테이지를 돌파하는 턴제 로그라이크 웹게임입니다.
 
-현재는 구현 전 설계 단계입니다. 승인된 상세 설계는 [프로토타입 설계 문서](docs/superpowers/specs/2026-06-20-turn-based-roguelike-design.md)에 정리되어 있습니다.
+현재 React + TypeScript 프론트엔드에 1-1 전투 버티컬 슬라이스가 구현되어 있습니다. 적 행동 예고, 세 영웅의 행동 선택, 생존한 적의 반격, 승리·패배 결과, 재시작, 모바일 가로 모드와 세로 모드 안내를 포함합니다. 승인된 상세 설계는 [프로토타입 설계 문서](docs/superpowers/specs/2026-06-20-turn-based-roguelike-design.md)에 정리되어 있으며, 현재 검증 상태는 [전투 버티컬 슬라이스 체크리스트](docs/testing/combat-vertical-slice-checklist.md)에서 확인할 수 있습니다.
 
 ## 핵심 방향
 
@@ -51,6 +51,26 @@
 Windows 데스크톱과 macOS 노트북에서 같은 저장소를 사용할 수 있게 운영체제별 절대 경로를 피합니다. Docker는 필수가 아니라 편한 실행 수단입니다. 개발 중에는 React와 Spring Boot를 로컬에서 실행하고 PostgreSQL만 Docker로 실행할 수도 있습니다.
 
 PC와 모바일을 처음부터 함께 검증합니다. 모바일 전투 화면은 가로 모드를 기준으로 합니다.
+
+## 로컬에서 첫 전투 실행
+
+Node.js 22.12 이상과 npm 10 이상이 필요합니다.
+
+```powershell
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0
+```
+
+Vite가 출력하는 `Local` URL로 데스크톱에서 접속할 수 있습니다. 같은 Wi-Fi에 연결된 모바일 기기에서는 `Network` URL로 접속하고 가로 모드로 플레이합니다.
+
+전체 자동 검증은 프론트엔드 디렉터리에서 실행합니다.
+
+```powershell
+npm run check
+```
+
+현재 버티컬 슬라이스는 프론트엔드만으로 실행되므로 Docker, Spring Boot, PostgreSQL은 아직 필요하지 않습니다.
 
 ## 플레이 로그와 밸런스 분석
 
