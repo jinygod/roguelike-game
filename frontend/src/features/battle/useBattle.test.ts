@@ -1,0 +1,147 @@
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { createStageOneBattle } from "../../game/engine/createBattle";
+import { useBattle } from "./useBattle";
+
+describe("useBattle", () => {
+  it("initializes the battle controller and exposes its command API", () => {
+    const { result } = renderHook(() => useBattle());
+
+    expect(result.current.battle.round).toBe(1);
+    expect(result.current.battle.phase).toBe("hero");
+    expect(result.current.selectedHero).toBeNull();
+    expect(result.current.selectedSkillId).toBeNull();
+    expect(typeof result.current.selectHero).toBe("function");
+    expect(typeof result.current.selectSkill).toBe("function");
+    expect(typeof result.current.attackTarget).toBe("function");
+    expect(typeof result.current.endHeroTurn).toBe("function");
+    expect(typeof result.current.restart).toBe("function");
+  });
+
+  it("selects a hero and clears the previously selected skill", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("warrior");
+    });
+    act(() => {
+      result.current.selectSkill("slash");
+    });
+
+    expect(result.current.selectedSkillId).toBe("slash");
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+
+    expect(result.current.selectedHero?.id).toBe("archer");
+    expect(result.current.selectedSkillId).toBeNull();
+  });
+
+  it("selects a matching skill and ignores invalid skill selections", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("slash");
+    });
+
+    expect(result.current.selectedSkillId).toBeNull();
+
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+
+    expect(result.current.selectedSkillId).toBe("shot");
+
+    act(() => {
+      result.current.selectSkill("magic-bolt");
+    });
+
+    expect(result.current.selectedSkillId).toBe("shot");
+  });
+
+  it("ignores attacks without a selection and resolves a selected attack", () => {
+    const { result } = renderHook(() => useBattle());
+    const initialBattle = result.current.battle;
+
+    act(() => {
+      result.current.attackTarget("rat-a");
+    });
+
+    expect(result.current.battle).toBe(initialBattle);
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+    act(() => {
+      result.current.attackTarget("rat-a");
+    });
+
+    expect(
+      result.current.battle.enemies.find((enemy) => enemy.id === "rat-a")
+        ?.hp,
+    ).toBe(0);
+    expect(result.current.selectedSkillId).toBeNull();
+    expect(result.current.selectedHero).toBeNull();
+    expect(result.current.battle.selectedHeroId).toBeNull();
+  });
+
+  it("clears the selected skill and advances the round when ending the hero turn", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+
+    expect(result.current.selectedSkillId).toBe("shot");
+
+    act(() => {
+      result.current.endHeroTurn();
+    });
+
+    expect(result.current.selectedSkillId).toBeNull();
+    expect(result.current.battle.round).toBe(2);
+    expect(result.current.battle.phase).toBe("hero");
+  });
+
+  it("restarts with a fresh battle and clears controller selections", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+    act(() => {
+      result.current.attackTarget("rat-a");
+    });
+    act(() => {
+      result.current.selectHero("mage");
+    });
+    act(() => {
+      result.current.selectSkill("magic-bolt");
+    });
+
+    expect(result.current.battle.events.length).toBeGreaterThan(0);
+    expect(result.current.selectedHero?.id).toBe("mage");
+    expect(result.current.selectedSkillId).toBe("magic-bolt");
+
+    act(() => {
+      result.current.restart();
+    });
+
+    expect(result.current.battle).toEqual(createStageOneBattle());
+    expect(result.current.selectedHero).toBeNull();
+    expect(result.current.selectedSkillId).toBeNull();
+  });
+});
