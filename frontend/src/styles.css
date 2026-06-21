@@ -1,3 +1,79 @@
+:root {
+  color: #f1ecd9;
+  background: #030705;
+  font-family:
+    "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR",
+    system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  color-scheme: dark;
+  --forest-1000: #030705;
+  --forest-950: #050b08;
+  --forest-900: #08110c;
+  --forest-850: #0c1710;
+  --forest-800: #112018;
+  --forest-700: #192c20;
+  --gold-700: #70552f;
+  --gold-600: #93723d;
+  --gold-500: #b18b49;
+  --gold-300: #dfbc68;
+  --ink-100: #f1ecd9;
+  --ink-300: #cbc4a8;
+  --ink-500: #938f7d;
+  --danger-500: #a9473f;
+  --danger-700: #57251f;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+}
+
+html {
+  background: var(--forest-1000);
+}
+
 body {
+  min-height: 100svh;
   margin: 0;
+  overflow-x: hidden;
+  background: var(--forest-1000);
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--forest-1000);
+  background: var(--gold-300);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

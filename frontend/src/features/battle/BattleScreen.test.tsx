@@ -205,6 +205,30 @@ describe("BattleResult", () => {
 });
 
 describe("BattleScreen", () => {
+  it("keeps every battle action as a named button", async () => {
+    const user = setupBattle();
+
+    for (const button of screen.getAllByRole("button")) {
+      expect(button).toHaveAccessibleName();
+    }
+
+    await user.click(
+      screen.getByRole("button", { name: "궁수 선택" }),
+    );
+
+    for (const button of screen.getAllByRole("button")) {
+      expect(button).toHaveAccessibleName();
+    }
+  });
+
+  it("does not render emoji characters in visible battle text", () => {
+    setupBattle();
+
+    expect(document.body.textContent).not.toMatch(
+      /\p{Extended_Pictographic}/u,
+    );
+  });
+
   it("keeps every enemy action disabled before a skill is selected", () => {
     setupBattle();
 

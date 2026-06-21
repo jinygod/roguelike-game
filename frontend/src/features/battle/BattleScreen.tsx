@@ -5,6 +5,7 @@ import { Battlefield } from "./Battlefield";
 import { IntentPanel } from "./IntentPanel";
 import { SkillBar } from "./SkillBar";
 import { useBattle } from "./useBattle";
+import "./battle.css";
 
 export function BattleScreen() {
   const controller = useBattle();
