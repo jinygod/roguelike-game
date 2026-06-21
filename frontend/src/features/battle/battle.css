@@ -555,9 +555,13 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  display: grid;
-  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
   padding: 32px;
+  overflow: hidden;
   color: var(--color-accent);
   border: 8px solid var(--color-page);
   outline: 1px solid var(--color-border-strong);
@@ -568,6 +572,11 @@
   line-height: 1.65;
   letter-spacing: 0.04em;
   text-align: center;
+}
+
+.orientation-guard[open] {
+  display: grid;
+  place-items: center;
 }
 
 @media (hover: hover) {
@@ -767,6 +776,27 @@
   .battle-result {
     width: min(86vw, 340px);
     padding: 20px;
+  }
+}
+
+@media (max-width: 700px) and (orientation: landscape) {
+  .battle-topbar {
+    grid-template-columns: minmax(160px, 0.52fr) minmax(0, 1.48fr);
+  }
+
+  .intent-panel {
+    padding-inline: 4px;
+  }
+
+  .intent-list {
+    gap: 2px;
+  }
+
+  .intent-row {
+    padding-inline: 3px;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
   }
 }
 

@@ -4,11 +4,13 @@ import type { BattlePhase } from "../../game/model/battle";
 interface BattleResultProps {
   phase: BattlePhase;
   onRestart: () => void;
+  suspended?: boolean;
 }
 
 export function BattleResult({
   phase,
   onRestart,
+  suspended = false,
 }: BattleResultProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasResult = phase === "victory" || phase === "defeat";
@@ -20,11 +22,25 @@ export function BattleResult({
       return;
     }
 
-    if (typeof dialog.showModal === "function") {
-      dialog.showModal();
-    } else {
-      dialog.setAttribute("open", "");
+    if (suspended) {
+      if (typeof dialog.close === "function" && dialog.open) {
+        dialog.close();
+      } else {
+        dialog.removeAttribute("open");
+      }
+
+      return;
     }
+
+    if (!dialog.open) {
+      if (typeof dialog.showModal === "function") {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute("open", "");
+      }
+    }
+
+    dialog.querySelector<HTMLButtonElement>("button")?.focus();
 
     return () => {
       if (typeof dialog.close === "function" && dialog.open) {
@@ -33,7 +49,7 @@ export function BattleResult({
         dialog.removeAttribute("open");
       }
     };
-  }, [hasResult, phase]);
+  }, [hasResult, phase, suspended]);
 
   if (!hasResult) {
     return null;

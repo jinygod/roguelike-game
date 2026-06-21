@@ -290,6 +290,46 @@ describe("BattleResult", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("closes while suspended and reopens with restart focused", () => {
+    const { rerender } = render(
+      <BattleResult
+        phase="victory"
+        suspended={false}
+        onRestart={() => undefined}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "전투 승리",
+    });
+
+    expect(dialog).toHaveAttribute("open");
+
+    rerender(
+      <BattleResult
+        phase="victory"
+        suspended
+        onRestart={() => undefined}
+      />,
+    );
+
+    expect(dialog).not.toHaveAttribute("open");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    rerender(
+      <BattleResult
+        phase="victory"
+        suspended={false}
+        onRestart={() => undefined}
+      />,
+    );
+
+    expect(dialog).toHaveAttribute("open");
+    expect(
+      screen.getByRole("button", { name: "1-1 다시 시작" }),
+    ).toHaveFocus();
+  });
 });
 
 describe("BattleScreen", () => {
@@ -313,6 +353,8 @@ describe("BattleScreen", () => {
     });
     const gameSurface = document.querySelector(".battle-game");
 
+    expect(dialog.tagName).toBe("DIALOG");
+    expect(dialog).toHaveAttribute("open");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveFocus();
     expect(gameSurface).toHaveAttribute("inert");
@@ -356,6 +398,62 @@ describe("BattleScreen", () => {
     expect(document.querySelector(".battle-game")).not.toHaveAttribute(
       "inert",
     );
+  });
+
+  it("restores the previously focused control after portrait mode", async () => {
+    const user = setupBattle();
+    const archerButton = screen.getByRole("button", {
+      name: "궁수 선택",
+    });
+
+    await user.click(archerButton);
+    expect(archerButton).toHaveFocus();
+
+    mediaQuery.setMatches(true);
+    expect(screen.getByRole("dialog")).toHaveFocus();
+
+    mediaQuery.setMatches(false);
+
+    expect(archerButton).toHaveFocus();
+  });
+
+  it("suspends a victory result under portrait and restores it in landscape", async () => {
+    const user = setupBattle();
+
+    await winStageOne(user);
+
+    const resultDialog = screen.getByRole("dialog", {
+      name: "전투 승리",
+    });
+    const restartButton = screen.getByRole("button", {
+      name: "1-1 다시 시작",
+    });
+
+    expect(resultDialog).toHaveAttribute("open");
+    expect(restartButton).toHaveFocus();
+
+    mediaQuery.setMatches(true);
+
+    const orientationDialog = screen.getByRole("dialog", {
+      name: "전투는 모바일 가로 모드에 최적화되어 있습니다.",
+    });
+
+    expect(screen.getAllByRole("dialog")).toEqual([
+      orientationDialog,
+    ]);
+    expect(orientationDialog.tagName).toBe("DIALOG");
+    expect(orientationDialog).toHaveAttribute("open");
+    expect(orientationDialog).toHaveFocus();
+    expect(resultDialog).not.toHaveAttribute("open");
+
+    mediaQuery.setMatches(false);
+
+    expect(screen.queryByText(
+      "전투는 모바일 가로 모드에 최적화되어 있습니다.",
+    )).not.toBeInTheDocument();
+    expect(resultDialog).toHaveAttribute("open");
+    expect(resultDialog).toBeVisible();
+    expect(restartButton).toHaveFocus();
   });
 
   it("cleans up the portrait media query listener", () => {

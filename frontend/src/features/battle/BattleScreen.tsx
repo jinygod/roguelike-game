@@ -43,7 +43,8 @@ function useMediaQuery(query: string) {
 export function BattleScreen() {
   const controller = useBattle();
   const isPortrait = useMediaQuery(portraitMediaQuery);
-  const orientationGuardRef = useRef<HTMLDivElement>(null);
+  const orientationGuardRef = useRef<HTMLDialogElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const hasLivingHeroWhoCanAct = controller.battle.heroes.some(
     (hero) => hero.hp > 0 && !hero.actedThisRound,
   );
@@ -58,9 +59,48 @@ export function BattleScreen() {
     : [];
 
   useEffect(() => {
-    if (isPortrait) {
-      orientationGuardRef.current?.focus();
+    if (!isPortrait) {
+      const previousFocus = previousFocusRef.current;
+
+      previousFocusRef.current = null;
+
+      if (previousFocus?.isConnected) {
+        previousFocus.focus();
+      }
+
+      return;
     }
+
+    const activeElement = document.activeElement;
+    const dialog = orientationGuardRef.current;
+
+    previousFocusRef.current =
+      activeElement instanceof HTMLElement &&
+      activeElement !== document.body
+        ? activeElement
+        : null;
+
+    if (!dialog) {
+      return;
+    }
+
+    if (!dialog.open) {
+      if (typeof dialog.showModal === "function") {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute("open", "");
+      }
+    }
+
+    dialog.focus();
+
+    return () => {
+      if (typeof dialog.close === "function" && dialog.open) {
+        dialog.close();
+      } else {
+        dialog.removeAttribute("open");
+      }
+    };
   }, [isPortrait]);
 
   return (
@@ -111,21 +151,22 @@ export function BattleScreen() {
 
         <BattleResult
           phase={controller.battle.phase}
+          suspended={isPortrait}
           onRestart={controller.restart}
         />
       </div>
 
       {isPortrait ? (
-        <div
+        <dialog
           ref={orientationGuardRef}
           className="orientation-guard"
-          role="dialog"
           aria-modal="true"
           aria-label={portraitGuidance}
-          tabIndex={0}
+          tabIndex={-1}
+          onCancel={(event) => event.preventDefault()}
         >
           {portraitGuidance}
-        </div>
+        </dialog>
       ) : null}
     </main>
   );
