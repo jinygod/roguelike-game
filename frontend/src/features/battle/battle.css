@@ -18,10 +18,10 @@
   background:
     linear-gradient(
       180deg,
-      rgb(2 7 4 / 34%),
-      rgb(1 4 2 / 58%)
+      rgb(2 7 4 / 28%),
+      rgb(1 4 2 / 48%)
     ),
-    url("../../assets/pixel/goblin-forest.png") center / cover fixed
+    url("../../assets/pixel/goblin-forest.png") center / cover
       no-repeat,
     var(--color-page);
 }
@@ -36,19 +36,7 @@
   padding: clamp(10px, 1.35vw, 20px);
   overflow: hidden;
   border-inline: 1px solid var(--battle-frame);
-  background:
-    linear-gradient(
-      90deg,
-      rgb(0 0 0 / 38%),
-      transparent 11% 89%,
-      rgb(0 0 0 / 38%)
-    ),
-    linear-gradient(
-      180deg,
-      rgb(7 16 11 / 34%) 0%,
-      rgb(11 23 16 / 18%) 42%,
-      rgb(5 11 8 / 52%) 100%
-    );
+  background: transparent;
 }
 
 .battle-topbar {
@@ -179,39 +167,15 @@
   background:
     linear-gradient(
       180deg,
-      rgb(3 8 5 / 30%) 0 32.9%,
+      transparent 0 32.9%,
       var(--battle-lane-line) 33%,
-      rgb(3 8 5 / 24%) 33.2% 66.1%,
+      transparent 33.2% 66.1%,
       var(--battle-lane-line) 66.2%,
-      rgb(2 6 4 / 42%) 66.4% 100%
-    ),
-    linear-gradient(
-      90deg,
-      rgb(0 0 0 / 24%),
-      transparent 24% 76%,
-      rgb(0 0 0 / 24%)
-    ),
-    url("../../assets/pixel/goblin-forest.png") center / cover
-      no-repeat,
-    var(--battle-field);
+      transparent 66.4% 100%
+    );
   box-shadow:
     inset 0 0 0 3px var(--color-page),
     inset 0 0 0 4px rgb(112 85 47 / 38%);
-}
-
-.battlefield::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      rgb(0 0 0 / 20%),
-      transparent 23% 77%,
-      rgb(0 0 0 / 20%)
-    );
 }
 
 .battlefield-team {
@@ -270,13 +234,13 @@
 
 .combatant-card-group {
   display: grid;
-  grid-template-columns: minmax(118px, 1fr) 88px;
+  grid-template-columns: minmax(118px, 1fr) 112px;
   grid-template-rows: minmax(0, 1fr) 9px;
   gap: 5px 9px;
   align-items: center;
   width: min(100%, 292px);
   min-width: 0;
-  min-height: 94px;
+  min-height: 118px;
   padding: 6px;
   border: 1px solid rgb(112 85 47 / 42%);
   border-radius: 1px;
@@ -287,7 +251,7 @@
 }
 
 .battlefield-enemies .combatant-card-group {
-  grid-template-columns: 88px minmax(118px, 1fr);
+  grid-template-columns: 112px minmax(118px, 1fr);
 }
 
 .combatant-nameplate {
@@ -319,12 +283,12 @@
   grid-row: 1 / 3;
   display: grid;
   place-items: center;
-  width: 88px;
-  min-width: 88px;
-  height: 88px;
-  min-height: 88px;
+  width: 112px;
+  min-width: 112px;
+  height: 112px;
+  min-height: 112px;
   padding: 5px;
-  overflow: visible;
+  overflow: hidden;
   color: inherit;
   border: 1px solid var(--color-border);
   border-radius: 1px;
@@ -386,6 +350,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center bottom;
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 3px rgb(0 0 0 / 68%));
   transition:
@@ -599,18 +564,18 @@
   }
 
   .combatant-card-group {
-    grid-template-columns: minmax(102px, 1fr) 76px;
+    grid-template-columns: minmax(88px, 1fr) 96px;
   }
 
   .battlefield-enemies .combatant-card-group {
-    grid-template-columns: 76px minmax(102px, 1fr);
+    grid-template-columns: 96px minmax(88px, 1fr);
   }
 
   .combatant-card {
-    width: 76px;
-    min-width: 76px;
-    height: 76px;
-    min-height: 76px;
+    width: 96px;
+    min-width: 96px;
+    height: 96px;
+    min-height: 96px;
   }
 }
 
@@ -673,8 +638,8 @@
 
   .battlefield {
     grid-template-columns:
-      minmax(176px, 1fr) minmax(52px, 0.72fr)
-      minmax(176px, 1fr);
+      minmax(184px, 1fr) minmax(52px, 0.72fr)
+      minmax(184px, 1fr);
     padding: 4px 7px;
   }
 
@@ -692,23 +657,23 @@
   }
 
   .combatant-card-group {
-    grid-template-columns: minmax(112px, 1fr) 52px;
+    grid-template-columns: minmax(100px, 1fr) 60px;
     grid-template-rows: minmax(0, 1fr) 7px;
     gap: 3px 5px;
-    width: min(100%, 198px);
-    min-height: 56px;
+    width: min(100%, 206px);
+    min-height: 64px;
     padding: 2px;
   }
 
   .battlefield-enemies .combatant-card-group {
-    grid-template-columns: 52px minmax(112px, 1fr);
+    grid-template-columns: 60px minmax(100px, 1fr);
   }
 
   .combatant-card {
-    width: 52px;
-    min-width: 52px;
-    height: 52px;
-    min-height: 52px;
+    width: 60px;
+    min-width: 60px;
+    height: 60px;
+    min-height: 60px;
     padding: 3px;
   }
 

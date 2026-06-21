@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import {
   act,
   render,
@@ -13,6 +15,9 @@ import {
   it,
   vi,
 } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { combatantSpriteUrls } from "../../assets/pixel/sprites";
 import { createStageOneBattle } from "../../game/engine/createBattle";
 import type { BattlePhase } from "../../game/model/battle";
 import { BattleResult } from "./BattleResult";
@@ -24,6 +29,10 @@ type BattleUser = ReturnType<typeof userEvent.setup>;
 
 const portraitMediaQuery =
   "(orientation: portrait) and (max-width: 820px)";
+const battleStyles = readFileSync(
+  resolve("src/features/battle/battle.css"),
+  "utf8",
+);
 
 function installMatchMedia(initialMatches = false) {
   let matches = initialMatches;
@@ -86,6 +95,23 @@ function installMatchMedia(initialMatches = false) {
       });
     },
   };
+}
+
+function getCssRule(selector: string) {
+  const escapedSelector = selector.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
+  const ruleMatch = battleStyles.match(
+    new RegExp(`(?:^|\\n)${escapedSelector} \\{`),
+  );
+  const ruleStart = ruleMatch?.index ?? -1;
+  const ruleEnd = battleStyles.indexOf("}", ruleStart);
+
+  expect(ruleStart).toBeGreaterThanOrEqual(0);
+  expect(ruleEnd).toBeGreaterThan(ruleStart);
+
+  return battleStyles.slice(ruleStart, ruleEnd + 1);
 }
 
 let mediaQuery: ReturnType<typeof installMatchMedia>;
@@ -216,7 +242,7 @@ describe("IntentPanel", () => {
 });
 
 describe("Battlefield", () => {
-  it("renders decorative combatant sprite assets without placeholders", () => {
+  it("maps every combatant to its decorative sprite without placeholders", () => {
     const battle = createStageOneBattle();
 
     render(
@@ -229,17 +255,35 @@ describe("Battlefield", () => {
       />,
     );
 
-    const warriorButton = screen.getByRole("button", {
-      name: "전사 선택",
-    });
-    const sprite = warriorButton.querySelector(
-      "img.combatant-sprite",
-    );
+    const heroes = new Set(battle.heroes);
+    const combatants = [...battle.heroes, ...battle.enemies];
 
-    expect(sprite?.tagName).toBe("IMG");
-    expect(sprite).toHaveAttribute("alt", "");
-    expect(sprite).toHaveAttribute("draggable", "false");
-    expect(sprite?.getAttribute("src")).toMatch(/warrior\.png$/);
+    for (const combatant of combatants) {
+      const action = heroes.has(
+        combatant as (typeof battle.heroes)[number],
+      )
+        ? "선택"
+        : "공격";
+      const button = screen.getByRole("button", {
+        name: `${combatant.name} ${action}`,
+      });
+      const sprite = button.querySelector("img.combatant-sprite");
+      const nameplateId = `combatant-${combatant.id}-nameplate`;
+
+      expect(sprite?.tagName).toBe("IMG");
+      expect(sprite).toHaveAttribute(
+        "src",
+        combatantSpriteUrls[combatant.kind],
+      );
+      expect(sprite).toHaveAttribute("alt", "");
+      expect(sprite).toHaveAttribute("draggable", "false");
+      expect(button).toHaveAttribute("aria-describedby", nameplateId);
+      expect(document.getElementById(nameplateId)).toBeInTheDocument();
+    }
+
+    expect(document.querySelectorAll("img.combatant-sprite")).toHaveLength(
+      combatants.length,
+    );
     expect(
       document.querySelector(".combatant-sprite-placeholder"),
     ).not.toBeInTheDocument();
@@ -270,6 +314,36 @@ describe("Battlefield", () => {
     expect(
       screen.getByRole("button", { name: "이끼 슬라임 공격" }),
     ).toBeDisabled();
+  });
+});
+
+describe("battle presentation styles", () => {
+  it("uses one continuous forest background without a fixed scene reset", () => {
+    const screenRule = getCssRule(".battle-screen");
+    const gameRule = getCssRule(".battle-game");
+    const battlefieldRule = getCssRule(".battlefield");
+
+    expect(screenRule).toContain(
+      'url("../../assets/pixel/goblin-forest.png")',
+    );
+    expect(screenRule.match(/linear-gradient/g)).toHaveLength(1);
+    expect(screenRule).not.toMatch(/\bfixed\b/);
+    expect(gameRule).toMatch(/background:\s*transparent/);
+    expect(battlefieldRule).not.toContain("goblin-forest.png");
+    expect(battlefieldRule).not.toMatch(/\bcover\b/);
+  });
+
+  it("bottom-aligns sprites in readable bounded desktop and mobile boxes", () => {
+    const cardRule = getCssRule(".combatant-card");
+    const spriteRule = getCssRule(".combatant-sprite");
+
+    expect(cardRule).toMatch(/width:\s*112px/);
+    expect(cardRule).toMatch(/height:\s*112px/);
+    expect(cardRule).toMatch(/overflow:\s*hidden/);
+    expect(spriteRule).toMatch(/object-position:\s*center bottom/);
+    expect(battleStyles).toMatch(
+      /@media \(max-width: 900px\) and \(orientation: landscape\)[\s\S]*?\.combatant-card \{[\s\S]*?width:\s*60px[\s\S]*?height:\s*60px/,
+    );
   });
 });
 
