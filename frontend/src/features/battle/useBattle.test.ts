@@ -38,6 +38,82 @@ describe("useBattle", () => {
     expect(result.current.selectedSkillId).toBeNull();
   });
 
+  it("preserves selection when the requested hero already acted", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("warrior");
+    });
+    act(() => {
+      result.current.selectSkill("slash");
+    });
+
+    const archer = result.current.battle.heroes.find(
+      (hero) => hero.id === "archer",
+    );
+
+    if (!archer) {
+      throw new Error("Missing archer test fixture");
+    }
+
+    archer.actedThisRound = true;
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+
+    expect(result.current.selectedHero?.id).toBe("warrior");
+    expect(result.current.selectedSkillId).toBe("slash");
+  });
+
+  it("preserves selection when the requested hero is defeated", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("warrior");
+    });
+    act(() => {
+      result.current.selectSkill("slash");
+    });
+
+    const archer = result.current.battle.heroes.find(
+      (hero) => hero.id === "archer",
+    );
+
+    if (!archer) {
+      throw new Error("Missing archer test fixture");
+    }
+
+    archer.hp = 0;
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+
+    expect(result.current.selectedHero?.id).toBe("warrior");
+    expect(result.current.selectedSkillId).toBe("slash");
+  });
+
+  it("preserves selection when selecting outside the hero phase", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("warrior");
+    });
+    act(() => {
+      result.current.selectSkill("slash");
+    });
+
+    result.current.battle.phase = "victory";
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+
+    expect(result.current.selectedHero?.id).toBe("warrior");
+    expect(result.current.selectedSkillId).toBe("slash");
+  });
+
   it("selects a matching skill and ignores invalid skill selections", () => {
     const { result } = renderHook(() => useBattle());
 
@@ -92,6 +168,44 @@ describe("useBattle", () => {
     expect(result.current.battle.selectedHeroId).toBeNull();
   });
 
+  it("ignores a defeated target without changing battle or selection", () => {
+    const { result } = renderHook(() => useBattle());
+
+    act(() => {
+      result.current.selectHero("archer");
+    });
+    act(() => {
+      result.current.selectSkill("shot");
+    });
+    act(() => {
+      result.current.attackTarget("rat-a");
+    });
+    act(() => {
+      result.current.selectHero("mage");
+    });
+    act(() => {
+      result.current.selectSkill("magic-bolt");
+    });
+
+    const battleBeforeInvalidAttack = result.current.battle;
+    const eventCount = result.current.battle.events.length;
+
+    expect(() => {
+      act(() => {
+        result.current.attackTarget("rat-a");
+      });
+    }).not.toThrow();
+
+    expect(result.current.battle).toBe(battleBeforeInvalidAttack);
+    expect(
+      result.current.battle.enemies.find((enemy) => enemy.id === "rat-a")
+        ?.hp,
+    ).toBe(0);
+    expect(result.current.battle.events).toHaveLength(eventCount);
+    expect(result.current.selectedHero?.id).toBe("mage");
+    expect(result.current.selectedSkillId).toBe("magic-bolt");
+  });
+
   it("clears the selected skill and advances the round when ending the hero turn", () => {
     const { result } = renderHook(() => useBattle());
 
@@ -112,6 +226,32 @@ describe("useBattle", () => {
     expect(result.current.battle.round).toBe(2);
     expect(result.current.battle.phase).toBe("hero");
   });
+
+  it.each(["victory", "defeat"] as const)(
+    "preserves battle and selection when ending a %s battle",
+    (phase) => {
+      const { result } = renderHook(() => useBattle());
+
+      act(() => {
+        result.current.selectHero("warrior");
+      });
+      act(() => {
+        result.current.selectSkill("slash");
+      });
+
+      result.current.battle.phase = phase;
+      const battleBeforeEnd = result.current.battle;
+
+      act(() => {
+        result.current.endHeroTurn();
+      });
+
+      expect(result.current.battle).toBe(battleBeforeEnd);
+      expect(result.current.battle.phase).toBe(phase);
+      expect(result.current.selectedHero?.id).toBe("warrior");
+      expect(result.current.selectedSkillId).toBe("slash");
+    },
+  );
 
   it("restarts with a fresh battle and clears controller selections", () => {
     const { result } = renderHook(() => useBattle());

@@ -14,7 +14,12 @@ export function battleReducer(
         (candidate) => candidate.id === command.heroId,
       );
 
-      if (battle.phase !== "hero" || !hero || hero.hp <= 0) {
+      if (
+        battle.phase !== "hero" ||
+        !hero ||
+        hero.hp <= 0 ||
+        hero.actedThisRound
+      ) {
         return battle;
       }
 
@@ -26,7 +31,7 @@ export function battleReducer(
         selectedHeroId: null,
       };
     case "end-hero-turn":
-      return resolveEnemyTurn(battle);
+      return battle.phase === "hero" ? resolveEnemyTurn(battle) : battle;
     case "restart":
       return createStageOneBattle();
     default: {

@@ -1,6 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useBattle } from "../../features/battle/useBattle";
 import { battleReducer } from "./battleReducer";
 import { createStageOneBattle } from "./createBattle";
 
@@ -83,6 +81,7 @@ describe("battleReducer", () => {
 
   it("leaves state unchanged when selecting a defeated hero", () => {
     const battle = createStageOneBattle();
+    battle.selectedHeroId = "warrior";
     battle.heroes = battle.heroes.map((hero) =>
       hero.id === "mage" ? { ...hero, hp: 0 } : hero,
     );
@@ -93,11 +92,29 @@ describe("battleReducer", () => {
     });
 
     expect(result).toBe(battle);
+    expect(result.selectedHeroId).toBe("warrior");
+  });
+
+  it("leaves state unchanged when selecting a hero that already acted", () => {
+    const battle = createStageOneBattle();
+    battle.selectedHeroId = "warrior";
+    battle.heroes = battle.heroes.map((hero) =>
+      hero.id === "archer" ? { ...hero, actedThisRound: true } : hero,
+    );
+
+    const result = battleReducer(battle, {
+      type: "select-hero",
+      heroId: "archer",
+    });
+
+    expect(result).toBe(battle);
+    expect(result.selectedHeroId).toBe("warrior");
   });
 
   it("leaves state unchanged when selecting outside the hero phase", () => {
     const battle = createStageOneBattle();
-    battle.phase = "enemy";
+    battle.phase = "victory";
+    battle.selectedHeroId = "mage";
 
     const result = battleReducer(battle, {
       type: "select-hero",
@@ -105,6 +122,7 @@ describe("battleReducer", () => {
     });
 
     expect(result).toBe(battle);
+    expect(result.selectedHeroId).toBe("mage");
   });
 
   it("clears the selected hero after a successful skill", () => {
@@ -125,42 +143,19 @@ describe("battleReducer", () => {
       result.heroes.find((hero) => hero.id === "archer")?.actedThisRound,
     ).toBe(true);
   });
-});
 
-describe("useBattle", () => {
-  it("ignores a skill that does not belong to the selected hero", () => {
-    const { result } = renderHook(() => useBattle());
+  it.each(["victory", "defeat"] as const)(
+    "leaves %s battles unchanged when ending the hero turn",
+    (phase) => {
+      const battle = createStageOneBattle();
+      battle.phase = phase;
+      battle.selectedHeroId = "warrior";
 
-    act(() => {
-      result.current.selectHero("warrior");
-    });
-    act(() => {
-      result.current.selectSkill("magic-bolt");
-    });
+      const result = battleReducer(battle, { type: "end-hero-turn" });
 
-    expect(result.current.selectedHero?.id).toBe("warrior");
-    expect(result.current.selectedSkillId).toBeNull();
-  });
-
-  it("clears skill and hero selection after attacking a target", () => {
-    const { result } = renderHook(() => useBattle());
-
-    act(() => {
-      result.current.selectHero("warrior");
-    });
-    act(() => {
-      result.current.selectSkill("slash");
-    });
-    act(() => {
-      result.current.attackTarget("slime");
-    });
-
-    expect(result.current.selectedSkillId).toBeNull();
-    expect(result.current.selectedHero).toBeNull();
-    expect(result.current.battle.selectedHeroId).toBeNull();
-    expect(
-      result.current.battle.heroes.find((hero) => hero.id === "warrior")
-        ?.actedThisRound,
-    ).toBe(true);
-  });
+      expect(result).toBe(battle);
+      expect(result.phase).toBe(phase);
+      expect(result.selectedHeroId).toBe("warrior");
+    },
+  );
 });
