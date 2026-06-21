@@ -1,6 +1,18 @@
-import { render, screen } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { createStageOneBattle } from "../../game/engine/createBattle";
 import type { BattlePhase } from "../../game/model/battle";
 import { BattleResult } from "./BattleResult";
@@ -9,6 +21,82 @@ import { Battlefield } from "./Battlefield";
 import { IntentPanel } from "./IntentPanel";
 
 type BattleUser = ReturnType<typeof userEvent.setup>;
+
+const portraitMediaQuery =
+  "(orientation: portrait) and (max-width: 820px)";
+
+function installMatchMedia(initialMatches = false) {
+  let matches = initialMatches;
+  const listeners = new Set<
+    (event: MediaQueryListEvent) => void
+  >();
+  const addEventListener = vi.fn(
+    (
+      type: string,
+      listener: (event: MediaQueryListEvent) => void,
+    ) => {
+      if (type === "change") {
+        listeners.add(listener);
+      }
+    },
+  );
+  const removeEventListener = vi.fn(
+    (
+      type: string,
+      listener: (event: MediaQueryListEvent) => void,
+    ) => {
+      if (type === "change") {
+        listeners.delete(listener);
+      }
+    },
+  );
+  const mediaQueryList = {
+    get matches() {
+      return matches;
+    },
+    media: portraitMediaQuery,
+    onchange: null,
+    addEventListener,
+    removeEventListener,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  } as unknown as MediaQueryList;
+
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      expect(query).toBe(portraitMediaQuery);
+      return mediaQueryList;
+    }),
+  );
+
+  return {
+    addEventListener,
+    removeEventListener,
+    setMatches(nextMatches: boolean) {
+      matches = nextMatches;
+      act(() => {
+        const event = {
+          matches,
+          media: portraitMediaQuery,
+        } as MediaQueryListEvent;
+
+        listeners.forEach((listener) => listener(event));
+      });
+    },
+  };
+}
+
+let mediaQuery: ReturnType<typeof installMatchMedia>;
+
+beforeEach(() => {
+  mediaQuery = installMatchMedia();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function setupBattle() {
   const user = userEvent.setup();
@@ -205,6 +293,85 @@ describe("BattleResult", () => {
 });
 
 describe("BattleScreen", () => {
+  it("defaults to landscape when matchMedia is unavailable", () => {
+    vi.stubGlobal("matchMedia", undefined);
+
+    render(<BattleScreen />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "궁수 선택" }),
+    ).toBeInTheDocument();
+  });
+
+  it("guards portrait mode with a focused modal dialog", () => {
+    mediaQuery.setMatches(true);
+    render(<BattleScreen />);
+
+    const dialog = screen.getByRole("dialog", {
+      name: "전투는 모바일 가로 모드에 최적화되어 있습니다.",
+    });
+    const gameSurface = document.querySelector(".battle-game");
+
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveFocus();
+    expect(gameSurface).toHaveAttribute("inert");
+    expect(gameSurface).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.queryByRole("button", { name: "궁수 선택" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(gameSurface as HTMLElement).getAllByRole("button", {
+        hidden: true,
+      }),
+    ).not.toHaveLength(0);
+  });
+
+  it("removes the portrait guard without resetting battle state", async () => {
+    const user = setupBattle();
+
+    await user.click(
+      screen.getByRole("button", { name: "궁수 선택" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "사격 선택" }),
+    );
+
+    mediaQuery.setMatches(true);
+
+    expect(screen.getByRole("dialog")).toHaveFocus();
+    expect(
+      screen.queryByRole("button", { name: "사격 선택" }),
+    ).not.toBeInTheDocument();
+
+    mediaQuery.setMatches(false);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "궁수 선택" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("button", { name: "사격 선택" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector(".battle-game")).not.toHaveAttribute(
+      "inert",
+    );
+  });
+
+  it("cleans up the portrait media query listener", () => {
+    const { unmount } = render(<BattleScreen />);
+
+    expect(mediaQuery.addEventListener).toHaveBeenCalledOnce();
+
+    unmount();
+
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledOnce();
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledWith(
+      "change",
+      expect.any(Function),
+    );
+  });
+
   it("keeps every battle action as a named button", async () => {
     const user = setupBattle();
 
