@@ -14,7 +14,7 @@ export function IntentPanel({ battle }: IntentPanelProps) {
   const showIntents =
     battle.phase !== "victory" && battle.phase !== "defeat";
   const intentRows = showIntents
-    ? battle.intents.flatMap((intent, index) => {
+    ? battle.intents.flatMap((intent) => {
         const actor = combatants.get(intent.actorId);
         const target = combatants.get(intent.targetId);
         const skill = actor?.skills.find(
@@ -32,10 +32,7 @@ export function IntentPanel({ battle }: IntentPanelProps) {
         }
 
         return (
-          <li
-            key={`${intent.actorId}-${intent.targetId}-${intent.skillId}-${index}`}
-            className="intent-row"
-          >
+          <li key={intent.actorId} className="intent-row">
             {actor.name} → {target.name} · 피해 {skill.damage}
           </li>
         );

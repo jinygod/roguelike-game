@@ -52,6 +52,24 @@ async function winStageOne(user: BattleUser) {
 }
 
 describe("IntentPanel", () => {
+  it("preserves an actor intent row when its target changes", () => {
+    const battle = createStageOneBattle();
+    const { rerender } = render(<IntentPanel battle={battle} />);
+    const firstIntentRow = screen.getAllByRole("listitem")[0];
+    const retargetedBattle = {
+      ...battle,
+      intents: battle.intents.map((intent, index) =>
+        index === 0
+          ? { ...intent, targetId: "warrior" as const }
+          : intent,
+      ),
+    };
+
+    rerender(<IntentPanel battle={retargetedBattle} />);
+
+    expect(screen.getAllByRole("listitem")[0]).toBe(firstIntentRow);
+  });
+
   it("hides an intent when its target is defeated", () => {
     const battle = createStageOneBattle();
     battle.heroes = battle.heroes.map((hero) =>
@@ -161,6 +179,22 @@ describe("BattleResult", () => {
     },
   );
 
+  it("prevents canceling a terminal result dialog", () => {
+    render(
+      <BattleResult phase="victory" onRestart={() => undefined} />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    const restartButton = screen.getByRole("button");
+    const cancelEvent = new Event("cancel", { cancelable: true });
+
+    dialog.dispatchEvent(cancelEvent);
+
+    expect(cancelEvent.defaultPrevented).toBe(true);
+    expect(dialog).toHaveAttribute("open");
+    expect(restartButton).toBeInTheDocument();
+  });
+
   it("does not render a result during an active phase", () => {
     render(
       <BattleResult phase="hero" onRestart={() => undefined} />,
@@ -192,6 +226,7 @@ describe("BattleScreen", () => {
     });
     const nameplate = screen.getByText("궁수 · HP 8/8");
 
+    expect(archerButton.parentElement?.tagName).toBe("DIV");
     expect(archerButton).toHaveAttribute(
       "aria-describedby",
       "combatant-archer-nameplate",

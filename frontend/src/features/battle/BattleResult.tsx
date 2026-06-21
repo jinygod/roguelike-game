@@ -47,6 +47,7 @@ export function BattleResult({
       ref={dialogRef}
       className="battle-result"
       aria-labelledby="battle-result-heading"
+      onCancel={(event) => event.preventDefault()}
     >
       <h2 id="battle-result-heading">{heading}</h2>
       <button type="button" onClick={onRestart} autoFocus>

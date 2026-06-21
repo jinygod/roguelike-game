@@ -20,7 +20,7 @@ export function CombatantCard({
   const nameplateId = `combatant-${combatant.id}-nameplate`;
 
   return (
-    <article
+    <div
       className="combatant-card-group"
       data-selected={selected}
       data-defeated={defeated}
@@ -51,6 +51,6 @@ export function CombatantCard({
           style={{ width: `${hpPercentage}%` }}
         />
       </span>
-    </article>
+    </div>
   );
 }
