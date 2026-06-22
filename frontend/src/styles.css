@@ -1,0 +1,77 @@
+:root {
+  color: #f1ecd9;
+  background: #030705;
+  font-family:
+    "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR",
+    system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  color-scheme: dark;
+  --color-page: #030705;
+  --color-panel: #050b08;
+  --color-surface: #08110c;
+  --color-surface-raised: #112018;
+  --color-border: #70552f;
+  --color-border-strong: #93723d;
+  --color-accent-muted: #b18b49;
+  --color-accent: #dfbc68;
+  --color-text: #f1ecd9;
+  --color-text-muted: #cbc4a8;
+  --color-text-disabled: #938f7d;
+  --color-hp: #b64e45;
+  --color-hp-track: #1d100e;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+}
+
+html,
+body {
+  background: var(--color-page);
+}
+
+body {
+  min-height: 100svh;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+}
+
+:where(button, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--color-page);
+  background: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+    transition-duration: 1ms;
+  }
+}
