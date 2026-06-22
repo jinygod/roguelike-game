@@ -34,7 +34,7 @@
 
 ## 콘셉트 비교 기록
 
-승인 콘셉트는 `docs/design-concepts/combat-screen-concept-v1.png`이며, 저장소 밖의 임시 QA 증거로 데스크톱 초기 화면 1280x720, 데스크톱 승리 화면, 모바일 가로 844x390, 모바일 세로 390x844 스크린샷을 사용했다.
+승인 콘셉트는 [combat-screen-concept-v1.png](../design-concepts/combat-screen-concept-v1.png)이며, 최종 QA 증거로 [데스크톱 초기 화면 1280x720](screenshots/combat-desktop-initial-1280x720.png), [데스크톱 승리 화면 1280x720](screenshots/combat-desktop-victory-1280x720.png), [모바일 가로 844x390](screenshots/combat-mobile-landscape-844x390.png), [모바일 세로 390x844](screenshots/combat-mobile-portrait-390x844.png) 스크린샷을 사용했다.
 
 | 비교 항목 | 승인 콘셉트 근거 | 실제 렌더 근거 | 결과/의도적 차이 |
 | --- | --- | --- | --- |
@@ -48,6 +48,23 @@
 
 - [x] `view_image`로 승인 콘셉트와 최종 QA 스크린샷을 직접 비교했다.
 - [x] 의도적 차이를 제외하면 중대한 미해결 불일치는 없다.
+
+## 스크린샷 증거
+
+- [승인 콘셉트](../design-concepts/combat-screen-concept-v1.png)
+- [데스크톱 초기 화면 1280x720](screenshots/combat-desktop-initial-1280x720.png)
+- [데스크톱 승리 화면 1280x720](screenshots/combat-desktop-victory-1280x720.png)
+- [모바일 가로 844x390](screenshots/combat-mobile-landscape-844x390.png)
+- [모바일 세로 390x844](screenshots/combat-mobile-portrait-390x844.png)
+
+재현 방법: 소스 커밋 `f69672e`에서 아래 명령으로 Vite localhost를 실행한 뒤 Browser/IAB에서 위에 명시된 각 뷰포트로 생성했다.
+
+```powershell
+cd frontend
+npm run dev -- --host 0.0.0.0
+```
+
+이 스크린샷은 QA 증거이며 골든 픽셀 테스트가 아니다.
 
 ## 명령 검증
 
